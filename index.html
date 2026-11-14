@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python道場</title>
+<style>
+:root{
+  --bg:#f5f7fb; --card:#fff; --ink:#1f2937; --sub:#6b7280; --line:#e5e7eb;
+  --pri:#2563eb; --pri-soft:#e8f0ff; --ok:#16a34a; --ok-soft:#e9f9ee;
+  --warn:#d97706; --warn-soft:#fff6e5; --ng:#dc2626; --ng-soft:#fdeeee;
+  --lemon:#facc15; --code-bg:#f8fafc;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Courier New", monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic",Meiryo,sans-serif;
+  background:var(--bg);color:var(--ink);line-height:1.75;font-size:15px}
+header{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:10px 18px;
+  background:#fff;border-bottom:1px solid var(--line)}
+.logo{white-space:nowrap;font-weight:800;font-size:19px;letter-spacing:.02em;display:flex;align-items:center;gap:8px}
+.logo .mark{display:inline-grid;place-items:center;width:32px;height:32px;border-radius:9px;
+  background:linear-gradient(135deg,#3b82f6,#facc15);color:#fff;font-size:17px}
+.progress{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--sub)}
+.bar{width:160px;height:8px;border-radius:99px;background:#eef1f6;overflow:hidden}
+.bar>i{display:block;height:100%;width:0;background:linear-gradient(90deg,#3b82f6,#22c55e);transition:width .4s}
+.status{font-size:12px;padding:3px 10px;border-radius:99px;background:var(--warn-soft);color:var(--warn);white-space:nowrap}
+.status.ready{background:var(--ok-soft);color:var(--ok)}
+.status.error{background:var(--ng-soft);color:var(--ng)}
+#menuBtn{display:none;border:1px solid var(--line);background:#fff;border-radius:8px;padding:4px 10px;font-size:16px;cursor:pointer}
+.wrap{display:flex;min-height:calc(100% - 55px)}
+aside{width:270px;flex:none;background:#fff;border-right:1px solid var(--line);padding:16px 10px;position:sticky;top:55px;
+  height:calc(100vh - 55px);overflow:auto}
+aside h2{font-size:12px;color:var(--sub);margin:0 10px 8px;letter-spacing:.08em}
+.lesson-item{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:0;background:none;padding:9px 10px;
+  border-radius:10px;cursor:pointer;font:inherit;font-size:14px;color:var(--ink)}
+.lesson-item:hover{background:#f3f6fb}
+.lesson-item.active{background:var(--pri-soft);color:var(--pri);font-weight:700}
+.lesson-item .num{flex:none;display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;
+  border:2px solid #d1d5db;font-size:12px;color:var(--sub);font-weight:700;background:#fff}
+.lesson-item.active .num{border-color:var(--pri);color:var(--pri)}
+.lesson-item.done .num{background:var(--ok);border-color:var(--ok);color:#fff}
+.reset-all{margin:16px 10px 0;font-size:12px;color:var(--sub);background:none;border:0;cursor:pointer;text-decoration:underline}
+main{flex:1;min-width:0;padding:22px 26px 60px;max-width:1280px}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:20px;align-items:start}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px 22px;box-shadow:0 1px 2px rgba(0,0,0,.03)}
+.card+.card{margin-top:16px}
+.kicker{font-size:12px;font-weight:700;color:var(--pri);letter-spacing:.08em}
+h1{font-size:22px;margin:2px 0 10px}
+h3{font-size:15px;margin:0 0 8px;display:flex;align-items:center;gap:8px}
+.badge{font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;background:var(--pri-soft);color:var(--pri)}
+.badge.task{background:#fff3c4;color:#92400e}
+code{font-family:var(--mono);background:#eef2f7;padding:1px 6px;border-radius:5px;font-size:.92em}
+pre{font-family:var(--mono);margin:0}
+.sample{background:var(--code-bg);border:1px solid var(--line);border-radius:10px;padding:12px 14px;overflow:auto;font-size:14px;line-height:1.6}
+pre.expect{background:#fffbea;border:1px dashed #f3d77a;border-radius:10px;padding:10px 12px;font-size:13.5px;margin:8px 0}
+.tip{background:var(--pri-soft);border-radius:10px;padding:8px 12px;font-size:14px;margin:10px 0}
+.small-btn{margin-top:8px;font-size:13px;border:1px solid var(--line);background:#fff;border-radius:8px;padding:4px 12px;cursor:pointer}
+.small-btn:hover{background:#f3f6fb}
+.editor{display:flex;border:1px solid #cfd6e1;border-radius:12px;overflow:hidden;background:#fff;height:300px}
+.editor:focus-within{border-color:var(--pri);box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+.gutter{flex:none;padding:12px 8px 12px 10px;background:#f6f8fb;color:#a0a8b5;font-family:var(--mono);font-size:14px;line-height:1.6;
+  text-align:right;user-select:none;overflow:hidden;white-space:pre;min-width:38px}
+textarea#code{flex:1;border:0;outline:0;resize:none;padding:12px;font-family:var(--mono);font-size:14px;line-height:1.6;
+  white-space:pre;overflow:auto;tab-size:4;color:#0f172a;background:#fff}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.btn{font:inherit;font-size:14px;font-weight:700;border-radius:10px;padding:8px 16px;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink)}
+.btn:hover{filter:brightness(.97)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn.run{background:var(--pri);border-color:var(--pri);color:#fff}
+.btn.check{background:var(--ok);border-color:var(--ok);color:#fff}
+.btn.ghost{color:var(--sub);font-weight:600}
+.btn.next{background:linear-gradient(90deg,#3b82f6,#22c55e);color:#fff;border:0;font-size:15px;padding:10px 22px}
+.kbd{font-size:12px;color:var(--sub);align-self:center;margin-left:auto}
+.out-head{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--sub);margin-bottom:6px}
+#output{background:#0f172a0a;border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-height:70px;max-height:260px;overflow:auto;
+  font-family:var(--mono);font-size:13.5px;white-space:pre-wrap;word-break:break-word}
+#output .err{color:var(--ng)}
+#output .muted{color:var(--sub)}
+.msg{border-radius:12px;padding:12px 14px;margin-top:12px;font-size:14px;display:none}
+.msg.show{display:block}
+.msg.ok{background:var(--ok-soft);border:1px solid #b7ebc6}
+.msg.ng{background:var(--warn-soft);border:1px solid #f5d9a8}
+.msg.err{background:var(--ng-soft);border:1px solid #f6c5c5}
+.msg.info{background:var(--pri-soft);border:1px solid #c9dafc}
+.msg b.big{font-size:17px}
+.diff{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.diff pre{background:#fff;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:13px;white-space:pre-wrap;word-break:break-word;min-height:36px}
+.diff .lbl{font-size:12px;color:var(--sub);margin-bottom:2px}
+.loader{display:inline-block;width:12px;height:12px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:spin .8s linear infinite;vertical-align:-1px;margin-right:4px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.confetti{position:fixed;top:-10px;width:9px;height:14px;z-index:99;border-radius:2px;pointer-events:none;animation:fall 1.6s ease-in forwards}
+@keyframes fall{to{transform:translateY(105vh) rotate(540deg);opacity:.2}}
+.finale{border:2px solid #c7f0d4;background:linear-gradient(180deg,#f0fdf4,#fff)}
+.finale pre.sample{margin:8px 0}
+@media (max-width:1000px){ .grid{grid-template-columns:1fr} }
+@media (max-width:760px){
+  #menuBtn{display:inline-block}
+  .bar{width:80px}
+  .progress .ptext{display:none}
+  header{padding:10px 12px;gap:8px}
+  .logo{font-size:17px}
+  .status{font-size:11px;padding:3px 8px}
+  aside{position:fixed;left:0;top:55px;z-index:30;transform:translateX(-100%);transition:transform .25s;box-shadow:4px 0 20px rgba(0,0,0,.08)}
+  aside.open{transform:none}
+  main{padding:14px 12px 50px}
+  .card{padding:16px}
+  .diff{grid-template-columns:1fr}
+  .kbd{display:none}
+}
+</style>
+</head>
+<body>
+<header>
+  <button id="menuBtn" aria-label="レッスン一覧">☰</button>
+  <div class="logo"><span class="mark">🐍</span>Python道場</div>
+  <div class="progress">
+    <span class="ptext" id="ptext">0 / 12 クリア</span>
+    <div class="bar"><i id="pbar"></i></div>
+    <span class="status" id="pystatus"><span class="loader"></span>Pythonを準備中…</span>
+  </div>
+</header>
+<div class="wrap">
+  <aside id="sidebar">
+    <h2>レッスン</h2>
+    <div id="lessonList"></div>
+    <button class="reset-all" id="resetAll">進み具合をすべて消す</button>
+  </aside>
+  <main>
+    <div class="grid">
+      <section>
+        <div class="card">
+          <div class="kicker" id="kicker">LESSON 1</div>
+          <h1 id="ltitle"></h1>
+          <div id="lexplain"></div>
+        </div>
+        <div class="card">
+          <h3><span class="badge">見本</span>サンプルコード</h3>
+          <pre class="sample" id="lsample"></pre>
+          <button class="small-btn" id="runSample">▶ 見本を動かしてみる</button>
+        </div>
+        <div class="card">
+          <h3><span class="badge task">練習問題</span></h3>
+          <div id="ltask"></div>
+        </div>
+        <div class="card finale" id="finale" style="display:none"></div>
+      </section>
+      <section>
+        <div class="card">
+          <h3>コードを書く</h3>
+          <div class="editor">
+            <div class="gutter" id="gutter">1</div>
+            <textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" aria-label="コードエディタ"></textarea>
+          </div>
+          <div class="btns">
+            <button class="btn run" id="btnRun">▶ 実行</button>
+            <button class="btn check" id="btnCheck">✓ 答え合わせ</button>
+            <button class="btn" id="btnHint">💡 ヒント</button>
+            <button class="btn" id="btnAnswer">答えを見る</button>
+            <button class="btn ghost" id="btnReset">リセット</button>
+            <span class="kbd">⌘/Ctrl + Enter で実行</span>
+          </div>
+          <div class="out-head"><span>実行結果</span><button class="small-btn" id="clearOut" style="margin:0">消す</button></div>
+          <div id="output"><span class="muted">ここに結果が表示されます。</span></div>
+          <div class="msg" id="msg"></div>
+          <div style="margin-top:14px;display:none" id="nextWrap"><button class="btn next" id="btnNext">次へ →</button></div>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<script type="application/json" id="lessonData">[{"id": "print", "title": "画面に文字を出す（print）", "explain": "\n<p>わたしと一緒に、まずはPythonに文字を表示してもらいましょう。<\/p>\n<p><code>print()<\/code>（かっこの中身を画面に表示する命令）を使います。表示したい文字は <code>\"<\/code>（ダブルクォーテーション）で囲みます。<code>\"<\/code> で囲んだ文字の並びを<b>文字列<\/b>（文字のデータ）と呼びます。<\/p>\n<p>下の「実行」（コードを動かすこと）ボタンを押すと、コード（Pythonへの指示を書いた文章）が上から順に動きます。<\/p>\n<div class=\"tip\">記号やかっこは<b>半角<\/b>で書きます。全角の <code>（<\/code> や <code>”<\/code> を使うと動きません。<\/div>\n", "sample": "print(\"こんにちは、ドンメカ\")", "task": "<code>Pythonをはじめました<\/code> と表示してください。", "starter": "# この下に書いてください\n", "hint": "<code>print(\"ここに文字\")<\/code> の形です。かっこと <code>\"<\/code> は半角で書きます。", "answer": "print(\"Pythonをはじめました\")", "expected": "Pythonをはじめました", "requires": [{"re": "print\\s*\\(", "msg": "print() を使って表示してください。"}]}, {"id": "number", "title": "文字列と数値・計算", "explain": "\n<p>Pythonは計算も得意です。<b>数値<\/b>（計算に使える数のデータ）は <code>\"<\/code> で囲まずに、そのまま書きます。<\/p>\n<p>計算の記号は <code>+<\/code>（足す）、<code>-<\/code>（引く）、<code>*<\/code>（かける）、<code>/<\/code>（割る）です。<\/p>\n<p><code>\"3 + 5\"<\/code> のように <code>\"<\/code> で囲むと<b>文字列<\/b>（文字のデータ）になり、計算されずにそのまま表示されます。<\/p>\n<div class=\"tip\"><code>/<\/code> で割ると、答えが割り切れても <code>25.0<\/code> のように小数で表示されます。<\/div>\n", "sample": "print(3 + 5)\nprint(\"3 + 5\")\nprint(10 / 2)", "task": "<p>1日に同じ画面操作を12回、5日間くり返すと全部で何回でしょう。<\/p>\n<p>1行目に <code>12 * 5<\/code> の結果、2行目に <code>100 / 4<\/code> の結果を、計算で表示してください。<\/p>", "starter": "# 1行目：12 * 5 の結果\n\n# 2行目：100 / 4 の結果\n", "hint": "<code>print(12 * 5)<\/code> のように、かっこの中に計算式をそのまま書きます。<code>\"<\/code> で囲まないのがポイントです。", "answer": "print(12 * 5)\nprint(100 / 4)", "expected": "60\n25.0", "requires": [{"re": "12\\s*\\*\\s*5|5\\s*\\*\\s*12", "msg": "60 を直接書かずに、12 * 5 の計算で出してください。"}, {"re": "100\\s*/\\s*4", "msg": "25.0 を直接書かずに、100 / 4 の計算で出してください。"}]}, {"id": "variable", "title": "変数", "explain": "\n<p><b>変数<\/b>（値に名前をつけてしまっておく箱）を使うと、同じ値を何度も使えます。<\/p>\n<p><code>name = \"ドンメカ\"<\/code> と書くと、<code>name<\/code> という箱に <code>\"ドンメカ\"<\/code> が入ります。この <code>=<\/code> は「等しい」ではなく<b>代入<\/b>（右の値を左の箱に入れること）という意味です。<\/p>\n<p>変数を使うときは <code>\"<\/code> で囲みません。<code>print(name)<\/code> で中身が表示されます。<\/p>\n", "sample": "name = \"ドンメカ\"\nprint(name)\n\ncount = 3\nprint(count * 2)", "task": "<p>① 変数 <code>button<\/code> に <code>\"ログインボタン\"<\/code> を入れて、<code>button<\/code> を表示してください。<\/p>\n<p>② 変数 <code>times<\/code> に <code>3<\/code> を入れて、<code>times * 4<\/code> の結果を表示してください。<\/p>", "starter": "# ① button\n\n# ② times\n", "hint": "<code>button = \"ログインボタン\"<\/code> と書いたあと、<code>print(button)<\/code> です。②も同じように <code>times = 3<\/code> → <code>print(times * 4)<\/code> です。", "answer": "button = \"ログインボタン\"\nprint(button)\n\ntimes = 3\nprint(times * 4)", "expected": "ログインボタン\n12", "requires": [{"re": "button\\s*=", "msg": "変数 button に値を入れてください（button = ...）。"}, {"re": "print\\s*\\(\\s*button\\s*\\)", "msg": "print(button) のように、変数を使って表示してください。"}, {"re": "times\\s*=\\s*3", "msg": "変数 times に 3 を入れてください（times = 3）。"}, {"re": "times\\s*\\*\\s*4", "msg": "times * 4 のように、変数を使って計算してください。"}]}, {"id": "fstring", "title": "f文字列で文をつくる", "explain": "\n<p><b>f文字列<\/b>（文字列の中に変数の値を埋め込む書き方）を使うと、文章の一部だけを入れかえられます。<\/p>\n<p>書き方は、<code>\"<\/code> の前に <code>f<\/code> をつけて、埋め込みたい<b>変数<\/b>（値に名前をつけてしまっておく箱）を <code>{ }<\/code> で囲むだけです。<\/p>\n<p>文字列と数値をそのまま <code>+<\/code> でつなぐとエラー（Pythonからの「うまく動かない」知らせ）になりますが、f文字列なら気にせず混ぜられます。<\/p>\n", "sample": "item = \"レポート\"\ncount = 3\nprint(f\"{item}を{count}件ダウンロードしました\")", "task": "<p>変数 <code>page<\/code> と <code>wait<\/code> を使って、f文字列で<\/p>\n<p><code>設定画面を開いて2秒待ちます<\/code><\/p><p>と表示してください。<\/p>", "starter": "page = \"設定画面\"\nwait = 2\n\n# この下にf文字列で書いてください\n", "hint": "<code>print(f\"{page}を開いて...\")<\/code> の形です。<code>wait<\/code> も <code>{wait}<\/code> で埋め込みます。", "answer": "page = \"設定画面\"\nwait = 2\n\nprint(f\"{page}を開いて{wait}秒待ちます\")", "expected": "設定画面を開いて2秒待ちます", "requires": [{"re": "\\bf[\\\"']", "msg": "f\"...\" の形のf文字列を使ってください。"}, {"re": "\\{\\s*page\\s*\\}", "msg": "{page} で変数 page を埋め込んでください。"}, {"re": "\\{\\s*wait\\s*\\}", "msg": "{wait} で変数 wait を埋め込んでください。"}]}, {"id": "list", "title": "リスト", "explain": "\n<p><b>リスト<\/b>（複数の値を順番に並べてしまう入れ物）は、<code>[ ]<\/code> で囲んで <code>,<\/code> で区切って書きます。<\/p>\n<p>中身は <b>インデックス<\/b>（何番目かを表す番号）で取り出します。インデックスは <b>0から<\/b>数えるので、最初の値は <code>steps[0]<\/code> です。<\/p>\n<p><code>len()<\/code>（中身の個数を数える命令）で個数がわかり、<code>.append()<\/code>（リストの最後に値を追加する命令）で中身を増やせます。<\/p>\n", "sample": "files = [\"a.zip\", \"b.zip\"]\nprint(files[0])\nfiles.append(\"c.zip\")\nprint(len(files))", "task": "<p>① <code>steps<\/code> の最初の値を表示してください。<\/p>\n<p>② <code>steps<\/code> の最後に <code>\"閉じる\"<\/code> を追加して、そのあと <code>len()<\/code> で個数を表示してください。<\/p>", "starter": "steps = [\"開く\", \"入力\", \"クリック\"]\n\n# ① 最初の値を表示\n\n# ② \"閉じる\" を追加して、個数を表示\n", "hint": "最初の値は <code>steps[0]<\/code> です。追加は <code>steps.append(\"閉じる\")<\/code>、個数は <code>print(len(steps))<\/code> です。", "answer": "steps = [\"開く\", \"入力\", \"クリック\"]\n\nprint(steps[0])\n\nsteps.append(\"閉じる\")\nprint(len(steps))", "expected": "開く\n4", "requires": [{"re": "steps\\s*\\[\\s*0\\s*\\]", "msg": "steps[0] で最初の値を取り出してください。"}, {"re": "\\.append\\s*\\(", "msg": ".append() で値を追加してください。"}, {"re": "len\\s*\\(", "msg": "len() で個数を数えてください。"}]}, {"id": "for", "title": "for文でくり返す", "explain": "\n<p><b>for文<\/b>（リストの中身を1つずつ取り出して、同じ処理をくり返す書き方）は、自動化でいちばんよく使う道具です。<\/p>\n<p><code>for file in files:<\/code> と書くと、<b>リスト<\/b>（複数の値を順番に並べた入れ物）<code>files<\/code> の中身が1つずつ <code>file<\/code> に入り、下の処理がくり返されます。<\/p>\n<p>くり返したい行は、行の先頭を <b>インデント<\/b>（行の先頭の字下げ。スペース4つ）します。行の最後の <code>:<\/code>（コロン）も忘れずに。インデントをやめた行は、くり返しが終わってから1回だけ動きます。<\/p>\n<div class=\"tip\">このエディタでは、Tabキーでスペース4つが入ります。<code>:<\/code> のあとで改行すると自動で字下げされます。<\/div>\n", "sample": "files = [\"a.zip\", \"b.zip\"]\nfor file in files:\n    print(f\"{file}を開きます\")\nprint(\"完了\")", "task": "<p>for文を使って、<code>files<\/code> の1つずつについて <code>〇〇を保存しました<\/code> と表示し、最後に1回だけ <code>おわり<\/code> と表示してください。<\/p>\n<pre class=\"expect\">請求書_01.pdfを保存しました\n請求書_02.pdfを保存しました\n請求書_03.pdfを保存しました\nおわり<\/pre>", "starter": "files = [\"請求書_01.pdf\", \"請求書_02.pdf\", \"請求書_03.pdf\"]\n\n# この下にfor文を書いてください\n", "hint": "<code>for file in files:<\/code> の次の行をスペース4つ下げて <code>print(f\"{file}を保存しました\")<\/code>。<code>print(\"おわり\")<\/code> は字下げしません。", "answer": "files = [\"請求書_01.pdf\", \"請求書_02.pdf\", \"請求書_03.pdf\"]\n\nfor file in files:\n    print(f\"{file}を保存しました\")\nprint(\"おわり\")", "expected": "請求書_01.pdfを保存しました\n請求書_02.pdfを保存しました\n請求書_03.pdfを保存しました\nおわり", "requires": [{"re": "\\bfor\\s+\\w+\\s+in\\b", "msg": "for文（for ... in ...:）を使ってください。"}]}, {"id": "if", "title": "if文で分ける", "explain": "\n<p><b>if文<\/b>（条件によって、する処理を分ける書き方）を使うと、「画像ファイルだけ別の処理をする」といった仕分けができます。<\/p>\n<p><code>if 条件:<\/code> の下の<b>インデント<\/b>（行の先頭の字下げ）した行は、条件が正しいときだけ動きます。<code>else:<\/code>（それ以外のとき）の下は、条件が正しくないときに動きます。<\/p>\n<p>比べる記号は <code>==<\/code>（等しいか）、<code>!=<\/code>（等しくないか）などです。今回は <code>.endswith()<\/code>（文字列が指定した文字で終わるか調べる命令）も使います。<\/p>\n", "sample": "status = \"完了\"\nif status == \"完了\":\n    print(\"次へ進みます\")\nelse:\n    print(\"もう一度ためします\")\n\nprint(\"photo.png\".endswith(\".png\"))", "task": "<p><b>for文<\/b>（くり返しの書き方）とif文を組み合わせて、ファイル名が <code>.png<\/code> で終わるものは <code>〇〇 は画像です<\/code>、それ以外は <code>〇〇 は画像ではありません<\/code> と表示してください。<\/p>\n<pre class=\"expect\">memo.txt は画像ではありません\nphoto.png は画像です\nreport.txt は画像ではありません\nlogo.png は画像です<\/pre>", "starter": "files = [\"memo.txt\", \"photo.png\", \"report.txt\", \"logo.png\"]\n\nfor file in files:\n    # この下にif文を書いてください\n    \n", "hint": "for文の中で <code>if file.endswith(\".png\"):<\/code>、その下をさらにスペース4つ下げて <code>print(f\"{file} は画像です\")<\/code>。<code>else:<\/code> は <code>if<\/code> と同じ深さに書きます。", "answer": "files = [\"memo.txt\", \"photo.png\", \"report.txt\", \"logo.png\"]\n\nfor file in files:\n    if file.endswith(\".png\"):\n        print(f\"{file} は画像です\")\n    else:\n        print(f\"{file} は画像ではありません\")", "expected": "memo.txt は画像ではありません\nphoto.png は画像です\nreport.txt は画像ではありません\nlogo.png は画像です", "requires": [{"re": "\\bif\\b", "msg": "if文を使ってください。"}, {"re": "\\belse\\s*:", "msg": "else: で「それ以外のとき」を書いてください。"}, {"re": "\\bfor\\s+\\w+\\s+in\\b", "msg": "for文でくり返してください。"}]}, {"id": "dict", "title": "辞書", "explain": "\n<p><b>辞書<\/b>（キーと値をセットでしまう入れ物）は、<code>{ }<\/code> の中に <code>キー: 値<\/code> を並べて書きます。<b>キー<\/b>（値を探すための名前）を使って <code>actions[\"click\"]<\/code> のように値を取り出せます。<\/p>\n<p><code>.items()<\/code>（キーと値を組にして取り出す命令）を <b>for文<\/b>（くり返しの書き方）と組み合わせると、全部の組を順に取り出せます。<\/p>\n<p>あとで手順ファイルの <code>click<\/code> を「クリック」に読みかえるときに、この辞書を使います。<\/p>\n", "sample": "page = {\"name\": \"ログイン画面\", \"url\": \"https://example.com/login\"}\nprint(page[\"name\"])\n\nfor key, value in page.items():\n    print(f\"{key}: {value}\")", "task": "<p>① <code>actions[\"click\"]<\/code> の値を表示してください。<\/p>\n<p>② for文と <code>.items()<\/code> で、全部の組を <code>キー: 値<\/code> の形で表示してください。<\/p>\n<pre class=\"expect\">クリック\nclick: クリック\ninput: 入力\nwait: 待機<\/pre>", "starter": "actions = {\"click\": \"クリック\", \"input\": \"入力\", \"wait\": \"待機\"}\n\n# ① click の値を表示\n\n# ② 全部の組を表示\n", "hint": "①は <code>print(actions[\"click\"])<\/code>。②は <code>for key, value in actions.items():<\/code> の下で <code>print(f\"{key}: {value}\")<\/code> です。<code>:<\/code> のあとの半角スペースも同じにしてください。", "answer": "actions = {\"click\": \"クリック\", \"input\": \"入力\", \"wait\": \"待機\"}\n\nprint(actions[\"click\"])\n\nfor key, value in actions.items():\n    print(f\"{key}: {value}\")", "expected": "クリック\nclick: クリック\ninput: 入力\nwait: 待機", "requires": [{"re": "actions\\s*\\[\\s*[\\\"']click[\\\"']\\s*\\]", "msg": "actions[\"click\"] でキーを使って取り出してください。"}, {"re": "\\.items\\s*\\(\\s*\\)", "msg": ".items() を使ってください。"}]}, {"id": "function", "title": "関数をつくる", "explain": "\n<p><b>関数<\/b>（よく使う処理をまとめて名前をつけたもの）を作ると、同じ処理を1行で何度も呼び出せます。<\/p>\n<p><code>def<\/code>（関数を作るときの合図）のあとに関数の名前と <code>( )<\/code> を書き、最後に <code>:<\/code> をつけます。かっこの中の <code>name<\/code> は<b>引数<\/b>（関数に渡す値を受け取る変数）です。<\/p>\n<p>関数の中身は<b>インデント<\/b>（行の先頭の字下げ）して書きます。作っただけでは動かず、<code>greet(\"ドンメカ\")<\/code> のように<b>呼び出す<\/b>（名前を書いて動かす）と動きます。<\/p>\n", "sample": "def greet(name):\n    print(f\"こんにちは、{name}\")\n\ngreet(\"ドンメカ\")\ngreet(\"Python\")", "task": "<p>引数 <code>target<\/code> を受け取って <code>〇〇をクリックします<\/code> と表示する関数 <code>click<\/code> を作り、<code>\"ログインボタン\"<\/code> と <code>\"送信ボタン\"<\/code> で1回ずつ呼び出してください。<\/p>\n<pre class=\"expect\">ログインボタンをクリックします\n送信ボタンをクリックします<\/pre>", "starter": "# 関数 click を作る\n\n\n# 2回呼び出す\n", "hint": "<code>def click(target):<\/code> の下をスペース4つ下げて <code>print(f\"{target}をクリックします\")<\/code>。そのあと字下げなしで <code>click(\"ログインボタン\")<\/code> と <code>click(\"送信ボタン\")<\/code> です。", "answer": "def click(target):\n    print(f\"{target}をクリックします\")\n\nclick(\"ログインボタン\")\nclick(\"送信ボタン\")", "expected": "ログインボタンをクリックします\n送信ボタンをクリックします", "requires": [{"re": "def\\s+click\\s*\\(\\s*\\w+\\s*\\)\\s*:", "msg": "def click(target): の形で関数を作ってください。"}, {"re": "(?:^|\\n)click\\s*\\([^)]*\\)[\\s\\S]*\\nclick\\s*\\(", "msg": "関数 click を2回呼び出してください。"}]}, {"id": "split", "title": "文字列を分割する", "explain": "\n<p>手順のテキストは <code>click,ログインボタン<\/code> のように「操作,対象」と書かれていることがよくあります。<\/p>\n<p><code>.split(\",\")<\/code>（文字列を指定した文字で分けてリストにする命令）を使うと、<code>[\"click\", \"ログインボタン\"]<\/code> という<b>リスト<\/b>（値を順番に並べた入れ物）になります。<\/p>\n<p><code>&quot;&quot;&quot;<\/code>（三連クォーテーション。複数行の文字列を書く書き方）で書いた文字列は、<code>.splitlines()<\/code>（複数行の文字列を1行ずつのリストに分ける命令）で1行ずつにできます。<\/p>\n", "sample": "line = \"click,ログインボタン\"\nparts = line.split(\",\")\nprint(parts[0])\nprint(parts[1])", "task": "<p><code>text<\/code> を1行ずつ取り出し、<code>,<\/code> で分けて、<code>操作: 〇〇 / 対象: 〇〇<\/code> の形で表示してください。<\/p>\n<pre class=\"expect\">操作: open / 対象: ログイン画面\n操作: input / 対象: ユーザー名\n操作: click / 対象: ログインボタン<\/pre>", "starter": "text = \"\"\"open,ログイン画面\ninput,ユーザー名\nclick,ログインボタン\"\"\"\n\nfor line in text.splitlines():\n    # この下で split して表示してください\n    \n", "hint": "for文の中で <code>parts = line.split(\",\")<\/code>、そのあと <code>print(f\"操作: {parts[0]} / 対象: {parts[1]}\")<\/code> です。", "answer": "text = \"\"\"open,ログイン画面\ninput,ユーザー名\nclick,ログインボタン\"\"\"\n\nfor line in text.splitlines():\n    parts = line.split(\",\")\n    print(f\"操作: {parts[0]} / 対象: {parts[1]}\")", "expected": "操作: open / 対象: ログイン画面\n操作: input / 対象: ユーザー名\n操作: click / 対象: ログインボタン", "requires": [{"re": "\\.split\\s*\\(\\s*[\\\"'],[\\\"']\\s*\\)", "msg": ".split(\",\") で分割してください。"}, {"re": "\\bfor\\s+\\w+\\s+in\\b", "msg": "for文で1行ずつ取り出してください。"}]}, {"id": "file", "title": "ファイルの読み書き", "explain": "\n<p><b>ファイル<\/b>（名前をつけて保存されたデータのかたまり）は <code>open()<\/code>（ファイルを開く命令）で開きます。<\/p>\n<p><code>with open(...) as f:<\/code> の <code>with<\/code>（使い終わったら自動でファイルを閉じてくれる書き方）を使うのが定番です。<code>\"w\"<\/code> は書き込み用、<code>\"r\"<\/code> は読み込み用です。<code>encoding=\"utf-8\"<\/code>（日本語を正しく扱うための文字コードの指定）もつけておきます。<\/p>\n<p>読み込んだファイルを <b>for文<\/b>（くり返しの書き方）で回すと1行ずつ取り出せます。各行の最後には改行がついているので、<code>.strip()<\/code>（前後の空白や改行を取りのぞく命令）で取りのぞきます。<\/p>\n<div class=\"tip\">ここで作るファイルはブラウザの中だけの仮のものです。ドンメカのMacには保存されません。<\/div>\n", "sample": "with open(\"memo.txt\", \"w\", encoding=\"utf-8\") as f:\n    f.write(\"1行目\\n2行目\\n\")\n\nwith open(\"memo.txt\", \"r\", encoding=\"utf-8\") as f:\n    for line in f:\n        print(line.strip())", "task": "<p>最初の数行で <code>手順.txt<\/code> を作ってあります。その下に、<code>手順.txt<\/code> を読み込み用で開いて、1行ずつ <code>- <\/code>（ハイフンと半角スペース）をつけて表示するコードを書いてください。<\/p>\n<pre class=\"expect\">- open,ログイン画面\n- input,ユーザー名\n- click,ログインボタン<\/pre>", "starter": "# 練習用の 手順.txt を作る（ここはそのままでOK）\nwith open(\"手順.txt\", \"w\", encoding=\"utf-8\") as f:\n    f.write(\"open,ログイン画面\\ninput,ユーザー名\\nclick,ログインボタン\\n\")\n\n# この下で 手順.txt を読み込んで表示してください\n", "hint": "<code>with open(\"手順.txt\", \"r\", encoding=\"utf-8\") as f:<\/code> の下で <code>for line in f:<\/code>、さらにその下で <code>print(f\"- {line.strip()}\")<\/code> です。", "answer": "# 練習用の 手順.txt を作る（ここはそのままでOK）\nwith open(\"手順.txt\", \"w\", encoding=\"utf-8\") as f:\n    f.write(\"open,ログイン画面\\ninput,ユーザー名\\nclick,ログインボタン\\n\")\n\nwith open(\"手順.txt\", \"r\", encoding=\"utf-8\") as f:\n    for line in f:\n        print(f\"- {line.strip()}\")", "expected": "- open,ログイン画面\n- input,ユーザー名\n- click,ログインボタン", "requires": [{"re": "open\\s*\\([\\s\\S]*open\\s*\\(", "msg": "open() で 手順.txt をもう一度、読み込み用で開いてください。"}, {"re": "\\.strip\\s*\\(", "msg": ".strip() で行の最後の改行を取りのぞいてください。"}]}, {"id": "final", "title": "まとめ：手順リストをつくる", "explain": "\n<p>いよいよまとめです。これまでの道具を全部使って、<b>手順ファイル<\/b>（1行に1つ操作を書いたテキスト）を、人が読める手順リストにします。<\/p>\n<p>流れはこうです。<\/p>\n<ol>\n<li><code>open()<\/code>（ファイルを開く命令）で <code>手順.txt<\/code> を開く<\/li>\n<li><b>for文<\/b>（くり返しの書き方）で1行ずつ取り出し、<code>.strip()<\/code>（前後の改行を取りのぞく命令）と <code>.split(\",\")<\/code>（「,」で分ける命令）で操作と対象に分ける<\/li>\n<li><b>辞書<\/b>（キーと値をセットでしまう入れ物）<code>labels<\/code> で <code>click<\/code> を「クリック」に読みかえる<\/li>\n<li><b>f文字列<\/b>（変数を埋め込める文字列）で番号つきの文にして表示する<\/li>\n<\/ol>\n<p>番号は <b>変数<\/b>（値をしまう箱）<code>number<\/code> で数えます。<code>number = number + 1<\/code> と書くと、箱の中身が1増えます。<\/p>\n", "sample": "number = 1\nfor word in [\"A\", \"B\"]:\n    print(f\"{number}. {word}\")\n    number = number + 1", "task": "<p><code>手順.txt<\/code> を読んで、次のように表示してください。<\/p>\n<pre class=\"expect\">1. ログイン画面を開く\n2. ユーザー名を入力\n3. ログインボタンをクリック\n4. ダウンロードボタンをクリック<\/pre>", "starter": "# 練習用の 手順.txt を作る（ここはそのままでOK）\nwith open(\"手順.txt\", \"w\", encoding=\"utf-8\") as f:\n    f.write(\"open,ログイン画面\\ninput,ユーザー名\\nclick,ログインボタン\\nclick,ダウンロードボタン\\n\")\n\nlabels = {\"open\": \"開く\", \"input\": \"入力\", \"click\": \"クリック\"}\nnumber = 1\n\n# この下に書いてください\n", "hint": "<code>with open(\"手順.txt\", \"r\", encoding=\"utf-8\") as f:<\/code> → <code>for line in f:<\/code> → <code>parts = line.strip().split(\",\")<\/code> → <code>print(f\"{number}. {parts[1]}を{labels[parts[0]]}\")<\/code> → <code>number = number + 1<\/code> の順です。", "answer": "# 練習用の 手順.txt を作る（ここはそのままでOK）\nwith open(\"手順.txt\", \"w\", encoding=\"utf-8\") as f:\n    f.write(\"open,ログイン画面\\ninput,ユーザー名\\nclick,ログインボタン\\nclick,ダウンロードボタン\\n\")\n\nlabels = {\"open\": \"開く\", \"input\": \"入力\", \"click\": \"クリック\"}\nnumber = 1\n\nwith open(\"手順.txt\", \"r\", encoding=\"utf-8\") as f:\n    for line in f:\n        parts = line.strip().split(\",\")\n        action = labels[parts[0]]\n        print(f\"{number}. {parts[1]}を{action}\")\n        number = number + 1", "expected": "1. ログイン画面を開く\n2. ユーザー名を入力\n3. ログインボタンをクリック\n4. ダウンロードボタンをクリック", "requires": [{"re": "open\\s*\\([\\s\\S]*open\\s*\\(", "msg": "open() で 手順.txt を読み込み用で開いてください。"}, {"re": "\\bfor\\s+\\w+\\s+in\\b", "msg": "for文で1行ずつ処理してください。"}, {"re": "\\.split\\s*\\(", "msg": ".split(\",\") で操作と対象に分けてください。"}, {"re": "labels\\s*\\[", "msg": "辞書 labels を使って操作名を読みかえてください。"}]}]</script>
+<script type="text/x-python" id="runnerPy">
+import sys, io, traceback, json, linecache
+
+_FNAME = "<あなたのコード>"
+
+def _dojo_run(src):
+    out = io.StringIO()
+    err = io.StringIO()
+    old = (sys.stdout, sys.stderr)
+    sys.stdout, sys.stderr = out, err
+    etype = ""
+    emsg = ""
+    lineno = None
+    linecache.cache[_FNAME] = (len(src), None, src.splitlines(True), _FNAME)
+    try:
+        code = compile(src, _FNAME, "exec")
+        exec(code, {"__name__": "__main__"})
+    except SystemExit:
+        pass
+    except BaseException as e:
+        etype = type(e).__name__
+        emsg = str(e)
+        if isinstance(e, SyntaxError):
+            lineno = e.lineno
+            emsg = e.msg or ""
+            text = "".join(traceback.format_exception_only(type(e), e))
+        else:
+            tb = e.__traceback__
+            while tb is not None and tb.tb_frame.f_code.co_filename != _FNAME:
+                tb = tb.tb_next
+            t = tb
+            while t is not None:
+                if t.tb_frame.f_code.co_filename == _FNAME:
+                    lineno = t.tb_lineno
+                t = t.tb_next
+            text = "".join(traceback.format_exception(type(e), e, tb))
+        err.write(text)
+    finally:
+        sys.stdout, sys.stderr = old
+    return json.dumps({"out": out.getvalue(), "err": err.getvalue(), "etype": etype,
+                       "emsg": emsg, "lineno": lineno}, ensure_ascii=False)
+</script>
+<script src="https://cdn.jsdelivr.net/pyodide/v0.29.5/full/pyodide.js"></script>
+<script>
+(function(){
+"use strict";
+var LESSONS = JSON.parse(document.getElementById("lessonData").textContent);
+var STORE_KEY = "python-dojo-v1";
+var state = loadState();
+var cur = Math.min(Math.max(state.current || 0, 0), LESSONS.length - 1);
+var pyodide = null, pyReady = false, running = false;
+
+var $ = function(id){ return document.getElementById(id); };
+var codeEl = $("code"), gutter = $("gutter"), outEl = $("output"), msgEl = $("msg");
+
+function loadState(){
+  try { var s = JSON.parse(localStorage.getItem(STORE_KEY) || "{}"); s.done = s.done || {}; s.code = s.code || {}; return s; }
+  catch(e){ return {done:{}, code:{}, current:0}; }
+}
+function saveState(){ try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch(e){} }
+function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+
+/* ---------- sidebar ---------- */
+function renderList(){
+  var html = "";
+  LESSONS.forEach(function(l, i){
+    var cls = "lesson-item" + (i === cur ? " active" : "") + (state.done[l.id] ? " done" : "");
+    html += '<button class="' + cls + '" data-i="' + i + '"><span class="num">' + (state.done[l.id] ? "✓" : (i+1)) + '</span><span>' + esc(l.title) + '</span></button>';
+  });
+  $("lessonList").innerHTML = html;
+  var n = LESSONS.filter(function(l){ return state.done[l.id]; }).length;
+  $("ptext").textContent = n + " / " + LESSONS.length + " クリア";
+  $("pbar").style.width = (n / LESSONS.length * 100) + "%";
+}
+$("lessonList").addEventListener("click", function(e){
+  var b = e.target.closest(".lesson-item"); if(!b) return;
+  openLesson(+b.dataset.i); $("sidebar").classList.remove("open");
+});
+$("menuBtn").addEventListener("click", function(){ $("sidebar").classList.toggle("open"); });
+
+/* ---------- lesson view ---------- */
+function openLesson(i){
+  saveCode();
+  cur = i; state.current = i; saveState();
+  var l = LESSONS[i];
+  $("kicker").textContent = "LESSON " + (i+1) + " / " + LESSONS.length;
+  $("ltitle").textContent = l.title;
+  $("lexplain").innerHTML = l.explain;
+  $("lsample").textContent = l.sample;
+  $("ltask").innerHTML = l.task;
+  codeEl.value = (state.code[l.id] != null) ? state.code[l.id] : l.starter;
+  updateGutter();
+  outEl.innerHTML = '<span class="muted">ここに結果が表示されます。</span>';
+  hideMsg();
+  $("nextWrap").style.display = state.done[l.id] && i < LESSONS.length - 1 ? "block" : "none";
+  renderFinale();
+  renderList();
+  window.scrollTo(0, 0);
+}
+function saveCode(){
+  var l = LESSONS[cur]; if(!l) return;
+  state.code[l.id] = codeEl.value; saveState();
+}
+function renderFinale(){
+  var f = $("finale");
+  var allDone = LESSONS.every(function(l){ return state.done[l.id]; });
+  if (cur === LESSONS.length - 1 && state.done[LESSONS[cur].id]) {
+    f.style.display = "block";
+    f.innerHTML = '<h3>🎓 ' + (allDone ? "全レッスン クリア！" : "まとめクリア！") + '</h3>' +
+      '<p>ドンメカ、おつかれさまでした。手順ファイルを読んで、人が読める手順リストにできました。これが仕事の自動化の土台です。</p>' +
+      '<p><b>次のステップ：Selenium</b>（PythonからChromeを操作する道具）</p>' +
+      '<p>Seleniumは本物のChromeを動かすので、このブラウザの中の道場では動きません。次はドンメカのMacにPythonとSeleniumを入れて、わたしと一緒に進めます。たとえば、今回の「click,ログインボタン」は、Seleniumではこんな形になります（見るだけでOKです）。</p>' +
+      '<pre class="sample">from selenium import webdriver\nfrom selenium.webdriver.common.by import By\n\ndriver = webdriver.Chrome()\ndriver.get("https://example.com/login")\ndriver.find_element(By.ID, "login-button").click()</pre>' +
+      '<p>今日の手順リストの1行1行が、こうした1つの操作になります。</p>';
+  } else { f.style.display = "none"; f.innerHTML = ""; }
+}
+
+/* ---------- editor ---------- */
+function updateGutter(){
+  var n = codeEl.value.split("\n").length, s = "";
+  for (var k = 1; k <= n; k++) s += k + "\n";
+  gutter.textContent = s;
+  gutter.scrollTop = codeEl.scrollTop;
+}
+function insertText(t){
+  codeEl.focus();
+  var ok = false;
+  try { ok = document.execCommand("insertText", false, t); } catch(e){}
+  if (!ok) { codeEl.setRangeText(t, codeEl.selectionStart, codeEl.selectionEnd, "end"); }
+  updateGutter();
+}
+function deleteRange(a, b){
+  codeEl.focus(); codeEl.setSelectionRange(a, b);
+  var ok = false;
+  try { ok = document.execCommand("delete", false); } catch(e){}
+  if (!ok) { codeEl.setRangeText("", a, b, "end"); }
+  updateGutter();
+}
+var saveTimer = null;
+codeEl.addEventListener("input", function(){ updateGutter(); clearTimeout(saveTimer); saveTimer = setTimeout(saveCode, 300); });
+codeEl.addEventListener("scroll", function(){ gutter.scrollTop = codeEl.scrollTop; });
+codeEl.addEventListener("keydown", function(e){
+  if (e.isComposing || e.keyCode === 229) return;
+  if ((e.metaKey || e.ctrlKey) && e.key === "Enter") { e.preventDefault(); runCode(); return; }
+  var v = codeEl.value, s = codeEl.selectionStart, en = codeEl.selectionEnd;
+  if (e.key === "Tab") {
+    e.preventDefault();
+    var ls = v.lastIndexOf("\n", s - 1) + 1;
+    if (e.shiftKey) {
+      var m = v.slice(ls).match(/^ {1,4}/);
+      if (m) { deleteRange(ls, ls + m[0].length); codeEl.setSelectionRange(Math.max(ls, s - m[0].length), Math.max(ls, en - m[0].length)); }
+    } else if (s !== en && v.slice(s, en).indexOf("\n") >= 0) {
+      var block = v.slice(ls, en).replace(/^/gm, "    ");
+      codeEl.setSelectionRange(ls, en); insertText(block);
+    } else { insertText("    "); }
+    return;
+  }
+  if (e.key === "Enter" && !e.shiftKey && !e.altKey) {
+    e.preventDefault();
+    var lineStart = v.lastIndexOf("\n", s - 1) + 1;
+    var line = v.slice(lineStart, s);
+    var indent = (line.match(/^ */) || [""])[0];
+    if (/:\s*$/.test(line)) indent += "    ";
+    insertText("\n" + indent);
+    return;
+  }
+  if (e.key === "Backspace" && s === en && s > 0) {
+    var ls2 = v.lastIndexOf("\n", s - 1) + 1, before = v.slice(ls2, s);
+    if (before.length > 0 && /^ +$/.test(before)) {
+      e.preventDefault();
+      var del = before.length % 4 || 4;
+      deleteRange(s - del, s);
+    }
+  }
+});
+
+/* ---------- Python ---------- */
+function setStatus(cls, html){ var el = $("pystatus"); el.className = "status " + cls; el.innerHTML = html; }
+function setButtons(){
+  ["btnRun","btnCheck","runSample"].forEach(function(id){ $(id).disabled = !pyReady || running; });
+}
+async function initPy(){
+  setButtons();
+  try {
+    if (typeof loadPyodide !== "function") throw new Error("Pyodideの読み込みに失敗しました");
+    pyodide = await loadPyodide();
+    await pyodide.runPythonAsync(document.getElementById("runnerPy").textContent);
+    pyReady = true;
+    setStatus("ready", "● Python 準備OK");
+  } catch (e) {
+    setStatus("error", "Pythonを読み込めませんでした");
+    outEl.innerHTML = '<span class="err">Python（Pyodide）を読み込めませんでした。インターネットにつながっているか確かめて、ページを再読み込みしてください。</span>\n<span class="muted">' + esc(e && e.message || e) + '</span>';
+  }
+  setButtons();
+}
+async function execPy(src){
+  pyodide.globals.set("_dojo_src", src);
+  var res = await pyodide.runPythonAsync("_dojo_run(_dojo_src)");
+  return JSON.parse(res);
+}
+
+/* ---------- error hints ---------- */
+function friendlyHint(r){
+  var t = r.etype, m = r.emsg || "", line = r.lineno ? (r.lineno + "行目あたり") : "";
+  var where = line ? "（" + line + "）" : "";
+  if (/invalid character|invalid non-printable character/.test(m))
+    return "全角の文字や全角スペースがまざっているようです" + where + "。かっこ・クォーテーション・スペースは半角にしてみてください。";
+  if (t === "IndentationError" || t === "TabError") {
+    if (/expected an indented block/.test(m)) return "「:」の次の行は、スペース4つ字下げ（インデント）が必要です" + where + "。";
+    if (/unexpected indent/.test(m)) return "字下げ（インデント）が不要な行に、スペースが入っているようです" + where + "。行の先頭のスペースを消してみてください。";
+    return "字下げ（インデント）の深さがそろっていないようです" + where + "。同じまとまりの行は、同じ数のスペースで始めます。";
+  }
+  if (t === "SyntaxError") {
+    if (/unterminated string|EOL while scanning|EOF while scanning/.test(m)) return "文字列の「\"」が閉じていないようです" + where + "。始まりと終わりの両方に「\"」があるか確かめてください。";
+    if (/expected ':'/.test(m)) return "行の最後に「:」（コロン）が足りないようです" + where + "。for・if・else・def の行は「:」で終わります。";
+    if (/was never closed|unmatched|does not match/.test(m)) return "かっこの数が合っていないようです" + where + "。「(」と「)」がペアになっているか確かめてください。";
+    if (/forgot a comma/.test(m)) return "「,」（カンマ）が抜けているようです" + where + "。";
+    if (/'=' |cannot assign|Maybe you meant '=='/.test(m)) return "比べるときは「==」、代入（箱に入れる）ときは「=」です" + where + "。";
+    return "書き方（文法）に、Pythonが読めないところがあるようです" + where + "。記号の抜けや、全角の文字がないか見てみてください。";
+  }
+  if (t === "NameError") {
+    var nm = (m.match(/name '([^']+)'/) || [])[1];
+    if (nm && /^[A-Z]/.test(nm) && /^(print|for|if|len|def|open)$/i.test(nm)) return "「" + nm + "」は小文字で「" + nm.toLowerCase() + "」と書きます。Pythonは大文字と小文字を区別します。";
+    return "「" + (nm || "?") + "」という名前が見つかりません" + where + "。変数（値の箱）の名前のつづり間違いか、文字列なのに「\"」で囲み忘れていないか確かめてください。";
+  }
+  if (t === "TypeError") {
+    if (/can only concatenate str|must be str, not|unsupported operand/.test(m)) return "文字列と数値をそのまま「+」でつなげないようです" + where + "。f文字列（f\"...{変数}...\"）を使うと混ぜられます。";
+    if (/takes \d+ positional argument|missing \d+ required positional argument/.test(m)) return "関数に渡す値（引数）の数が合っていないようです" + where + "。";
+    if (/not callable/.test(m)) return "かっこ「( )」をつけて呼び出せないものを呼び出しているようです" + where + "。";
+    return "データの種類（文字列・数値・リストなど）の組み合わせが合わないようです" + where + "。";
+  }
+  if (t === "IndexError") return "リストの番号（インデックス）が範囲の外です" + where + "。番号は0から数えます。";
+  if (t === "KeyError") return "辞書にそのキー " + m + " がありません" + where + "。つづりを確かめてください。";
+  if (t === "AttributeError") return "その命令はこのデータには使えないようです" + where + "。「.」のあとのつづりを確かめてください。";
+  if (t === "FileNotFoundError") return "ファイルが見つかりません" + where + "。ファイル名が合っているか、先に書き込みをしているか確かめてください。";
+  if (t === "ZeroDivisionError") return "0で割ることはできません" + where + "。";
+  if (t === "ValueError") return "値の形が想定と違うようです" + where + "。";
+  return "";
+}
+
+function showResult(r){
+  var html = "";
+  if (r.out) html += esc(r.out);
+  if (r.err) html += '<span class="err">' + esc(r.err) + '</span>';
+  if (!r.out && !r.err) html = '<span class="muted">（何も表示されませんでした。print() で表示できます）</span>';
+  outEl.innerHTML = html;
+  if (r.etype) {
+    var h = friendlyHint(r);
+    showMsg("err", "<b>エラーが出ました（" + esc(r.etype) + "）</b>" + (h ? "<br>💡 " + esc(h) : "") + '<br><span style="color:var(--sub);font-size:13px">上の赤い文字がPythonからの元のメッセージです。</span>');
+  }
+}
+function showMsg(cls, html){ msgEl.className = "msg show " + cls; msgEl.innerHTML = html; }
+function hideMsg(){ msgEl.className = "msg"; msgEl.innerHTML = ""; }
+
+async function runCode(){
+  if (!pyReady || running) return;
+  running = true; setButtons(); hideMsg(); saveCode();
+  outEl.innerHTML = '<span class="muted"><span class="loader"></span>実行中…</span>';
+  try { var r = await execPy(codeEl.value); showResult(r); return r; }
+  catch (e) { outEl.innerHTML = '<span class="err">' + esc(e && e.message || e) + '</span>'; }
+  finally { running = false; setButtons(); }
+}
+
+function normalize(s){ return String(s).replace(/\r\n/g, "\n").split("\n").map(function(x){ return x.replace(/\s+$/, ""); }).join("\n").trim(); }
+function stripComments(src){ return src.split("\n").filter(function(x){ return !/^\s*#/.test(x); }).join("\n"); }
+
+async function checkCode(){
+  if (!pyReady || running) return;
+  var l = LESSONS[cur];
+  var r = await runCode();
+  if (!r) return;
+  if (r.etype) return; // error message already shown
+  var actual = normalize(r.out), expected = normalize(l.expected);
+  if (actual !== expected) {
+    var a = actual.split("\n"), ex = expected.split("\n"), k = 0;
+    while (k < Math.max(a.length, ex.length) && a[k] === ex[k]) k++;
+    var detail;
+    if (!actual) detail = "まだ何も表示されていません。print() で表示してみましょう。";
+    else if (a.length !== ex.length && k >= Math.min(a.length, ex.length)) detail = "表示された行の数が違います（期待：" + ex.length + "行、いま：" + a.length + "行）。";
+    else detail = (k+1) + "行目がちがいます。期待：「" + (ex[k] || "（なし）") + "」／いま：「" + (a[k] || "（なし）") + "」";
+    showMsg("ng", "<b>おしい！ 表示がすこし違います。</b><br>" + esc(detail) +
+      '<div class="diff"><div><div class="lbl">期待される表示</div><pre>' + esc(expected) + '</pre></div><div><div class="lbl">いまの表示</div><pre>' + esc(actual || "（なし）") + '</pre></div></div>');
+    return;
+  }
+  var src = stripComments(codeEl.value);
+  for (var i = 0; i < (l.requires || []).length; i++) {
+    var q = l.requires[i];
+    if (!(new RegExp(q.re)).test(src)) {
+      showMsg("ng", "<b>表示はばっちりです！ あと一歩。</b><br>" + esc(q.msg));
+      return;
+    }
+  }
+  var first = !state.done[l.id];
+  state.done[l.id] = true; saveState(); renderList();
+  var praise = ["すばらしい！", "正解です！", "できました！", "おみごと！"][cur % 4];
+  var last = cur === LESSONS.length - 1;
+  showMsg("ok", '<b class="big">🎉 ' + praise + '</b><br>' + (last ? "ドンメカ、まとめの問題までクリアです。下の「次のステップ」も見てみてください。" : "ドンメカ、その調子です。「次へ」で次のレッスンに進めます。"));
+  $("nextWrap").style.display = last ? "none" : "block";
+  renderFinale();
+  if (first) confetti();
+}
+function confetti(){
+  var colors = ["#3b82f6","#22c55e","#facc15","#f472b6","#a78bfa"];
+  for (var i = 0; i < 40; i++) {
+    var d = document.createElement("div"); d.className = "confetti";
+    d.style.left = Math.random()*100 + "vw"; d.style.background = colors[i % colors.length];
+    d.style.animationDelay = (Math.random()*0.5) + "s";
+    document.body.appendChild(d); setTimeout(function(x){ return function(){ x.remove(); }; }(d), 2400);
+  }
+}
+
+$("btnRun").addEventListener("click", runCode);
+$("btnCheck").addEventListener("click", checkCode);
+$("btnHint").addEventListener("click", function(){ showMsg("info", "<b>💡 ヒント</b><br>" + LESSONS[cur].hint); });
+$("btnAnswer").addEventListener("click", function(){
+  var l = LESSONS[cur];
+  showMsg("info", '<b>答えの例</b><pre class="sample" style="margin:8px 0">' + esc(l.answer) + '</pre><button class="small-btn" id="useAnswer">エディタに入れる</button> <span style="font-size:13px;color:var(--sub)">見たあとに、自分でも打ちこんでみると身につきます。</span>');
+  $("useAnswer").addEventListener("click", function(){ codeEl.value = l.answer; updateGutter(); saveCode(); codeEl.focus(); });
+});
+$("btnReset").addEventListener("click", function(){
+  if (!confirm("このレッスンのコードを最初の状態に戻しますか？")) return;
+  codeEl.value = LESSONS[cur].starter; updateGutter(); saveCode(); hideMsg();
+  outEl.innerHTML = '<span class="muted">ここに結果が表示されます。</span>';
+});
+$("btnNext").addEventListener("click", function(){ if (cur < LESSONS.length - 1) openLesson(cur + 1); });
+$("clearOut").addEventListener("click", function(){ outEl.innerHTML = '<span class="muted">ここに結果が表示されます。</span>'; });
+$("runSample").addEventListener("click", async function(){
+  if (!pyReady || running) return;
+  running = true; setButtons(); hideMsg();
+  try { var r = await execPy(LESSONS[cur].sample); showResult(r); outEl.insertAdjacentHTML("afterbegin", '<span class="muted">― 見本の実行結果 ―\n</span>'); }
+  finally { running = false; setButtons(); }
+});
+$("resetAll").addEventListener("click", function(){
+  if (!confirm("すべてのレッスンの進み具合と書いたコードを消します。よろしいですか？")) return;
+  state = {done:{}, code:{}, current:0}; saveState(); cur = 0;
+  codeEl.value = ""; openLesson(0);
+});
+window.addEventListener("beforeunload", saveCode);
+
+window.__dojo = { execPy: function(s){ return execPy(s); }, ready: function(){ return pyReady; }, lessons: LESSONS, check: checkCode, open: openLesson };
+openLesson(cur);
+initPy();
+})();
+</script>
+</body>
+</html>
